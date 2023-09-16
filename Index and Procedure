@@ -1,0 +1,29 @@
+
+
+--  Utilização do Index na busca do Nome dos colabrodores - BD COmpany
+
+create index idx_Name on employee(Fname,Minit);
+
+-- Procedure de idade com os clientes do BD Ecommerce
+
+delimiter //
+
+create procedure idade_if(in PFisica int, out idade int, out res varchar(20))
+begin
+	declare dt datetime;
+    set dt = (select Dt_Nascimento from Pfisica where idPFisica = PFisica);
+    set idade = year(now()) - year(dt);
+    
+    if(idade >= 18)then
+		set res = 'Maior';
+	else
+		set res = 'Menor';
+	end if;
+    
+end //
+
+delimiter ;
+
+call idade_if(8,@idade,@res);
+select @idade,@res;
+
