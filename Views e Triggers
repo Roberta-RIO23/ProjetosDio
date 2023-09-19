@@ -1,0 +1,124 @@
+-- Views
+
+-- Número de empregados por departamento  
+
+select * from dept_locations;
+select * from employee;
+select * from departament;
+
+
+create view Qtd_Departament as select Dnumber, Dname, count(ssn) as E_Qtd from departament d
+	inner join employee e
+    on e.dno=d.dnumber
+    group by dname
+    order by dnumber asc;
+
+    
+select * from Qtd_Departament;
+
+
+
+
+-- Lista de departamentos e seus gerentes 
+
+create view Mgr_Dept as select dname as Dpt_Name, concat(Fname,' ', Lname) as Mgr_name from departament
+	inner join employee
+    on Mgr_ssn = ssn;
+    
+    select * from mgr_dept;
+
+-- Projetos com maior número de empregados 
+
+select * from project;
+select * from employee;
+select * from works_on;
+
+create view Qtd_Employee_Project as select Pno, Pname, count(essn) as Qtd_Employee from works_on
+	inner join project 
+    on Pno=Pnumber
+	group by pno
+    order by pno desc;
+    
+select * from Qtd_Employee_Project;
+    
+-- Lista de projetos, departamentos e gerentes 
+
+select * from project;
+select * from departament; 
+select * from employee;   
+
+create view Mgr_Dname_Project as select ssn, concat(Fname,' ',Lname) as Super_Name, Dname, Pname from departament
+	join employee
+    on ssn=Mgr_ssn
+    inner join project
+    on dnum=dnumber;
+    
+select * from Mgr_Dname_Project;
+
+-- Quais empregados possuem dependentes e se são gerentes
+
+select * from departament; 
+select * from dependent;
+select * from employee;
+
+create view Mgr_dependent as Select ssn, concat(Fname,' ',Lname) as E_Name, count(Dependent_Name) as Qtd_Dependent from employee
+	join departament
+    on Mgr_ssn=ssn
+    inner join dependent
+    on Mgr_ssn=Essn
+    group by ssn;
+	
+select * from Mgr_dependent;
+
+-- Criando usar Mgr com todas as permissões 
+
+create user mgr_employee@localhost identified by '123456';
+
+grant all privileges on *.* to mgr_employee@localhost;
+
+flush privileges;
+
+-- Criando user employee, permissão para visualização
+
+create user employee@localhost identified by '654321';
+
+grant select on company.employee to employee@localhost;
+
+flush privileges;
+
+show grants for employee@localhost;
+
+-- Trigger para setar novos salarios com aumento
+
+DELIMITER //
+
+CREATE TRIGGER aumento_salario
+BEFORE INSERT ON employee
+FOR EACH ROW
+BEGIN
+    SET NEW.salary = NEW.salary * 1.20;
+END;
+
+//
+
+DELIMITER ;
+
+select * from employee;
+
+
+-- Trigger para remoção dos clientes desativados para outra tabela
+
+DELIMITER //
+
+CREATE TRIGGER Clientes_Inativos
+AFTER DELETE ON clientes
+FOR EACH ROW
+BEGIN
+    INSERT INTO Clientes_Inativos (idClientes,Nome, Rua, Bairro, UF, Telefone, Tipo_cliente,Dt_desativacao)
+    VALUES (OLD.idClientes, OLD.Nome, OLD.Rua,old.Bairro,old.UF, old.Telefone,old.Tipo_cliente,now());
+END;
+
+//
+
+DELIMITER ;
+
