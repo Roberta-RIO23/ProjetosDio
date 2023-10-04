@@ -1,0 +1,65 @@
+
+-- CODE 1 TRANSAÇÕES 
+
+start transaction;
+	insert into clientes(Nome,Rua,Bairro,UF,Telefone,Tipo_Cliente) values
+	('Maria da Silva', 'Rua das Flores', 'Jardim Primavera', 'SP', '55551234', 'PF'),
+	('Empresa ABC Ltda', 'Avenida Comercial', 'Centro', 'RJ', '33335678', 'PJ'),
+	('João Pereira', 'Rua da Amizade', 'Vila Esperança', 'MG', '44447890', 'PF'),
+	('Loja XYZ', 'Rua do Comércio', 'Centro', 'SP', '77779999', 'PJ'),
+	('Pedro Santos', 'Avenida da Liberdade', 'Liberdade', 'SP', '88882222', 'PF');
+
+select * from clientes;
+commit;
+
+select * from clientes;
+
+set @@autocommit = off;
+select @@autocommit;
+
+start transaction;
+insert into clientes(Nome,Rua,Bairro,UF,Telefone,Tipo_Cliente) values
+	('Maria Teste', 'Rua das Flores', 'Jardim Primavera', 'SP', '55551234', 'PF');
+commit;
+
+select @@autocommit;
+use oficina;
+select @@autocommit;
+
+select * from veiculos;
+desc veiculos;
+
+
+-- CODE 2 TRANSAÇÃO COM PROCEDURE
+
+Delimiter //
+
+create procedure Insere_clientes()
+Begin 
+	Declare erro_SQL tinyint default false;
+	Declare continue handler for sqlexception set erro_SQL = true;
+
+start transaction;
+	set @@autocommit=0;
+
+	insert into veiculos(idCliVeiculo,Doc_CRV,Placa,TipoVeiculo) values (1,'58412651652','PMG1253','Carro');
+	insert into veiculos(idCliVeiculo,Doc_CRV,Placa,TipoVeiculo) values (2, '78954235698', 'XYZ7890', 'Moto');
+	INSERT INTO veiculos (idCliVeiculo, Doc_CRV, Placa,TipoVeiculo) VALUES (1, '45698712345', 'ABC4567', 'Carro');
+	INSERT INTO veiculos (idCliVeiculo, Doc_CRV, Placa,TipoVeiculo) VALUES (3, '32165498732', 'LMN1234', 'Carro');
+	INSERT INTO veiculos (idCliVeiculo, Doc_CRV, Placa,TipoVeiculo) VALUES (2, '65432178965', 'DEF7891', 'Caminhão');
+    
+if erro_SQL = false then 
+		commit;
+		select 'Transação concluida com sucesso' as Resultado;
+	else 
+		rollback;
+		select 'erro na transação' as Resultado;
+	end if;
+
+end //
+
+delimiter ;
+
+call insere_clientes;
+
+select * from veiculos;
